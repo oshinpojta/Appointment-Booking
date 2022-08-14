@@ -1,79 +1,22 @@
-const baseURL = "https://crudcrud.com/api/34cc3f94586b4f55bfcf6bc41cd8ac70";
-const appointmentsURL = "/appointments";
+const baseURL = "http://localhost:3000";
+
 const APIheaders = {
   'Access-Control-Allow-Origin' : '*',
-  'Access-Control-Allow-Methods':'GET,PUT,POST,DELETE,PATCH,OPTIONS'
+  'Access-Control-Allow-Methods':'GET,PUT,POST,DELETE,PATCH,OPTIONS',
+  'Content-type' : 'application/json'
 }
 // ATTENTION: THIS IS CODE FROM THE YOUTUBE CRASH COURSE. IT IS NOT MEANT TO RUN, IT IS JUST FOR LEARNING PURPOSES //
 const name = document.querySelector("#name");
 const email = document.querySelector("#email");
 const phone = document.querySelector("#phone");
 const hidden = document.querySelector("#hidden")
-const ul  = document.querySelector("#users");
 const btn = document.querySelector(".btn")
 const form = document.querySelector("#my-form");
 const show = document.querySelector("#show");
 const msg = document.querySelector(".msg");
 form.style.background = "orange";
-form.addEventListener("submit",saveUser);
-form.addEventListener("mouseover",onMouseOver);
-form.addEventListener("mouseout",onMouseOut);
 
-window.addEventListener('DOMContentLoaded', (e) => {
-  //display
-  console.log("DOM LOADED");
-  let appointmentsList = [];
-
-  axios.get(baseURL+appointmentsURL).then(res=>{
-
-    appointmentsList = res.data;
-    console.log(appointmentsList);
-
-    for(let i=0;i<appointmentsList.length;i++){
-
-      var editbtn = document.createElement("button");
-      editbtn.className = "edit";
-      editbtn.textContent="Edit";
-      editbtn.style.backgroundColor="cyan";
-      editbtn.style.display = "inline";
-      editbtn.style.padding = "3px";
-      editbtn.style.borderWidth = "3px";
-      editbtn.style.marginRight = "4px";
-      editbtn.addEventListener("click",edituser);
-      var deletebtn = document.createElement("button");
-      deletebtn.className = "delete";
-      deletebtn.textContent = "Delete";
-      deletebtn.style.backgroundColor = "red";
-      deletebtn.style.display = "inline";
-      deletebtn.style.padding = "3px";
-      deletebtn.style.borderWidth = "3px";
-      deletebtn.addEventListener("click",deleteuser);
-  
-      //Adding Appointments List
-      let li = document.createElement("li");
-      li.id = appointmentsList[i]._id;
-      let userJson = appointmentsList[i];
-      console.log(userJson);
-      var userp = document.createElement("h3");
-      userp.className = "user";
-      userp.textContent = userJson.name;
-      var emailp = document.createElement("h5");
-      emailp.textContent = userJson.email;
-      emailp.className = "email";
-      var phonep = document.createElement("h5");
-      phonep.className = "phone";
-      phonep.textContent = userJson.phone;
-      li.appendChild(userp);
-      li.appendChild(emailp);
-      li.appendChild(phonep);
-      li.appendChild(editbtn);
-      li.appendChild(deletebtn);
-      ul.appendChild(li)
-    }
-  }).catch((err)=>console.log(err));
-});
-
-function saveUser(e){
+let saveUser = async (e) => {
   e.preventDefault();
   if(name.value==="" || email.value==="" || phone.value ===""){
     msg.classList.add("error");
@@ -85,97 +28,20 @@ function saveUser(e){
   }else{
     const userObj = {"name":name.value,"email":email.value, "phone" : phone.value};
     console.log(hidden.value);
-    if(hidden.value===""){
-      console.log("New User")
-      //localStorage.setItem(email.value,userObj);
-      const returnedUserJson = axios.post(baseURL+appointmentsURL,userObj,APIheaders).then(res => console.log(res)).catch(err=>console.log(err));
-      var editbtn = document.createElement("button");
-      editbtn.className = "edit";
-      editbtn.textContent="Edit";
-      editbtn.style.backgroundColor="cyan";
-      editbtn.style.display = "inline";
-      editbtn.style.padding = "3px";
-      editbtn.style.borderWidth = "3px";
-      editbtn.style.marginRight = "4px";
-      editbtn.addEventListener("click",edituser);
-      var deletebtn = document.createElement("button");
-      deletebtn.className = "delete";
-      deletebtn.textContent = "Delete";
-      deletebtn.style.backgroundColor = "red";
-      deletebtn.style.display = "inline";
-      deletebtn.style.padding = "3px";
-      deletebtn.style.borderWidth = "3px";
-      deletebtn.addEventListener("click",deleteuser);
-      
-      let li = document.createElement("li");
-      li.id = returnedUserJson._id;
-      var userp = document.createElement("h3");
-      userp.className = "user";
-      userp.textContent = name.value;
-      var emailp = document.createElement("h5");
-      emailp.textContent = email.value;
-      emailp.className = "email"
-;      var phonep = document.createElement("h5");
-      phonep.textContent = phone.value;
-      phonep.className = "phone";
-      li.appendChild(userp);
-      li.appendChild(emailp);
-      li.appendChild(phonep);
-      li.appendChild(editbtn);
-      li.appendChild(deletebtn);
-      ul.appendChild(li)
-    }else{
-      console.log("Updating User");
-      axios.put(baseURL+appointmentsURL+"/"+hidden.value,userObj).then((res)=>console.log(res)).catch((err)=>console.log(err));
-      let ulist = ul.children;
-      for(let i=0;i<ulist.length;i++){
-        var userheader = ulist[i].querySelector(".user");
-        var emailheader = ulist[i].querySelector(".email");
-        var phoneHeader = ulist[i].querySelector(".phone");
-        if(emailheader.textContent.includes(email.value)){
-          userheader.textContent = name.value;
-          phoneHeader.textContent = phone.value;
-        }
-        ulist[i].style.display = "list-item";
+    try{
+      if(hidden.value===""){
+        console.log("New User")
+        await axios.post(baseURL+"/add-user",userObj,APIheaders);
+      }else{
+        console.log("Updating User");
+        await axios.put(baseURL+"/"+hidden.value,userObj).then((res)=>console.log(res)).catch((err)=>console.log(err));
       }
-    }
-    msg.classList.add("success");
-    msg.innerHTML = "Successfully Saved !";
-    setTimeout(()=> msg.remove(), 5000);
-    name.value = "";
-    email.value = "";
-    phone.value = "";
-    hidden.value = "";
-  }
-}
-
-function edituser(e){
-  e.preventDefault();
-  let editli = e.target.parentNode;
-  let ulist = ul.children;
-  for(let i=0;i<ulist.length;i++){
-    if(editli===ulist[i]){
-      ulist[i].style.display = "none";
-    }else{
-      ulist[i].style.display = "list-item";
+      window.location.replace("http://127.0.0.1:5500/views/show-users.html");
+    }catch(err){
+      console.log(err);
+      window.location.replace("http://127.0.0.1:5500/views/404.html");
     }
   }
-  let nameli = editli.querySelector(".user");
-  let emailli = editli.querySelector(".email");
-  let phoneli = editli.querySelector(".phone");
-  console.log(emailli.textContent);
-  name.value = nameli.textContent;
-  email.value = emailli.textContent;
-  phone.value = phoneli.textContent;
-  hidden.value = editli.id;
-}
-
-function deleteuser(e){
-  e.preventDefault();
-  let editli = e.target.parentNode;
-  let emailli = editli.querySelector(".email");
-  axios.delete(baseURL+appointmentsURL+"/"+editli.id).then((res) => console.log(res));
-  e.target.parentNode.remove();
 }
 
 function onMouseOver(e){
@@ -187,6 +53,12 @@ function onMouseOut(e){
   e.preventDefault();
   form.style.background = "orange";
 }
+
+form.addEventListener("submit",saveUser);
+form.addEventListener("mouseover",onMouseOver);
+form.addEventListener("mouseout",onMouseOut);
+
+
 
 /**
 // LOGGING OUTPUT
